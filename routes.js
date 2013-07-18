@@ -23,13 +23,65 @@
  * 
  */
 
+var A4_WIDTH
+
+var utils = require('./utils')
+  , fs = require('fs')
+  , temp = require('temp')
+  , coolog = require('coolog')
+  , logger = coolog.logger('Plee.co - Routes', true)
+  , phantom = require('node-phantom')
+  , PDFDocument = require('pdfkit');
 
 /**
  * Grab a web page from an url and create a pdf file
  */
 module.exports.grabByUrl = function (req, res) {
-  res.write("grabbing by url");
-  res.end();
+  
+  var url = req.query.url
+    , tempImageFileName = temp.path({suffix: '.jpg'});
+
+  if (!utils.isUrlValid(url)) {
+      res.statusCode = 202;
+      res.setHeader('Content-Type', 'application/json');
+      res.write(JSON.stringify({ 'message' : 'invalid url ' + req.query.url }));
+      res.end();
+  }
+
+  phantom.create(function (err, ph) {
+  ph.createPage(function (err, page) {
+    page.open(url, function (err, status) {
+      page.render(tempImageFileName, function (err) {
+        var pdf = new PDFDocument();
+
+        if (err) {
+          logger.error("Error while creating image ", err);
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.write(JSON.stringify({ 'message' : 'Api error' }));
+          res.end();            
+        } else {
+          pdf.image(tempImageFileName, 0, 0, {
+            fit : [545, 842]
+          });
+          pdf.output(function (repr) {
+            res.setHeader('Content-Length', repr.length);
+            res.setHeader('Content-Type', 'application/pdf; charset=utf-8');
+            res.write(new Buffer(repr,'binary'));
+            res.end();
+            try { 
+              fs.unlink(tempImageFileName); 
+            } catch (e) {}
+          })
+        }
+        ph.exit();
+      });
+    });
+  });
+});
+
+
+
 }
 
 /**
