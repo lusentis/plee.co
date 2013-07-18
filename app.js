@@ -23,7 +23,8 @@
  * 
  */
 
-var API_PORT = 3000; // change with ENV variable?
+var API_PORT = 3000 // change with ENV variable?
+  , SECRET_KEY = process.env.SECRET_KEY;
 
 var coolog = require('coolog')
   , logger = coolog.logger('Plee.co', true)
@@ -41,8 +42,15 @@ var app = connect()
 
 
 function validateKey (req, res, next) {
-  // TODO: implement
-  next();
+  var key = req.query.key;
+  if (key == null || key == undefined || key !== SECRET_KEY) {
+      res.statusCode = 401;
+      res.setHeader('Content-Type', 'application/json');
+      res.write(JSON.stringify({ 'message' : 'Invalid api key' }));
+      res.end();
+  } else {
+    next();
+  }
 }
 
 function dispatch (req, res, next) {
