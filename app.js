@@ -52,7 +52,7 @@ function dispatch (req, res, next) {
     routes.grabByUrl(req, res);
 
   } else if ('GET' === req.method && '/byhtml' === path) {
-    routes.createByBase65(req, res);
+    routes.createByBase64(req, res);
 
   } else {
     res.statusCode = 400;

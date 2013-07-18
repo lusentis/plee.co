@@ -43,6 +43,7 @@ module.exports.grabByUrl = function (req, res) {
       res.setHeader('Content-Type', 'application/json');
       res.write(JSON.stringify({ 'message' : 'invalid url ' + req.query.url }));
       res.end();
+      return;
   }
   
   exec("phantomjs bin/rasterize.js '" + url + "' " + tempPdfFile + " A4", function (error, stdout, stderr) {
@@ -84,7 +85,59 @@ module.exports.grabByUrl = function (req, res) {
 /**
  * Grab a web page from html code (encoded using base64)
  */
-module.exports.createByBase65 = function (req, res) {
-  res.write("creating by base64");
-  res.end();
+module.exports.createByBase64 = function (req, res) {
+  
+  var base64Html = req.query.html
+    , tempPdfFile = temp.path({suffix: '.pdf'})
+    , tempHtmlFile = temp.path({suffix: '.html'});
+
+  if (base64Html == null || base64Html == undefined)  {
+      res.statusCode = 202;
+      res.setHeader('Content-Type', 'application/json');
+      res.write(JSON.stringify({ 'message' : 'missing parameters (html)' }));
+      res.end();    
+      return;
+  }
+
+  fs.writeFileSync(tempHtmlFile, new Buffer(base64Html, 'base64'));
+  
+  exec("phantomjs bin/rasterize.js '" + tempHtmlFile + "' " + tempPdfFile + " A4", function (error, stdout, stderr) {
+    if(error !== null) {
+      res.statusCode = 202;
+      res.setHeader('Content-Type', 'application/json');
+      res.write(JSON.stringify({ 'message' : 'Api error' }));
+      res.end();      
+      logger.error("Error while creating pdf ", stderr);
+      return;
+    }
+
+    fs.readFile(tempPdfFile, function (err, data) {
+      if (err) {
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json');
+        res.write(JSON.stringify({ 'message' : 'api error' }));
+        res.end();
+        logger.error("Error while reading pdf file " + tempPdfFile, err);
+        return;
+      }
+
+      res.setHeader("Content-Type" , "application/pdf" );
+      res.setHeader("Content-Disposition:", "attachment; filename='file.pdf'"); //change with the url
+      res.write(data);
+      res.end();
+
+      // be sure to delete temp files
+      try { 
+        fs.unlink(tempPdfFile); 
+      } catch (e) {
+        logger.warn(e);
+      }
+
+      try { 
+        fs.unlink(tempHtmlFile); 
+      } catch (e) {
+        logger.warn(e);
+      }
+    });
+  });  
 }
