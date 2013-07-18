@@ -19,6 +19,29 @@ source .env
 node app.js
 ```
 
+### Api
+You can grab a page using url using this api
+```
+http://<host>/byurl?url=<url>&key=<key>
+```
+For example
+```
+http://localhost:3000/byurl?url=http://arstechnica.com/&key=test
+```
+
+You can also create a pdf passing the html code
+```
+http://<host>/byhtml?html=<html>&key=<key>
+```
+For example
+```
+http://localhost:3000/byhtml?html=PGh0bWw%2BDQo8Ym9keT4NCiA8cD4gSGVsbG8gV29ybGQhIDwvcD4NCjwvYm9keT4NCjwvaHRtbD4%3D&key=test
+```
+Note that html param must be encoded using base64 format.
+
+
+
+
 ## License ##
 
 Copyright (c) 2013 PlasticPanda.com
