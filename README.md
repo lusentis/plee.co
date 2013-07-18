@@ -28,6 +28,10 @@ For example
 ```
 http://localhost:3000/byurl?url=http://arstechnica.com/&key=test
 ```
+or
+```
+http://localhost:3000/byurl?url=http%3A%2F%2Farstechnica.com%2F&key=test
+```
 
 You can also create a pdf passing the html code
 ```
