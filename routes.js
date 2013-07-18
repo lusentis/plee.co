@@ -39,7 +39,7 @@ module.exports.grabByUrl = function (req, res) {
     , tempPdfFile = temp.path({suffix: '.pdf'});
 
   if (!utils.isUrlValid(url)) {
-      res.statusCode = 202;
+      res.statusCode = 400;
       res.setHeader('Content-Type', 'application/json');
       res.write(JSON.stringify({ 'message' : 'invalid url ' + req.query.url }));
       res.end();
@@ -48,7 +48,7 @@ module.exports.grabByUrl = function (req, res) {
   
   exec("phantomjs bin/rasterize.js '" + url + "' " + tempPdfFile + " A4", function (error, stdout, stderr) {
     if(error !== null) {
-      res.statusCode = 202;
+      res.statusCode = 400;
       res.setHeader('Content-Type', 'application/json');
       res.write(JSON.stringify({ 'message' : 'Api error' }));
       res.end();      
@@ -92,7 +92,7 @@ module.exports.createByBase64 = function (req, res) {
     , tempHtmlFile = temp.path({suffix: '.html'});
 
   if (base64Html == null || base64Html == undefined)  {
-      res.statusCode = 202;
+      res.statusCode = 400;
       res.setHeader('Content-Type', 'application/json');
       res.write(JSON.stringify({ 'message' : 'missing parameters (html)' }));
       res.end();    
@@ -103,7 +103,7 @@ module.exports.createByBase64 = function (req, res) {
   
   exec("phantomjs bin/rasterize.js '" + tempHtmlFile + "' " + tempPdfFile + " A4", function (error, stdout, stderr) {
     if(error !== null) {
-      res.statusCode = 202;
+      res.statusCode = 400;
       res.setHeader('Content-Type', 'application/json');
       res.write(JSON.stringify({ 'message' : 'Api error' }));
       res.end();      
