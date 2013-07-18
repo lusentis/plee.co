@@ -23,15 +23,12 @@
  * 
  */
 
-var A4_WIDTH
-
 var utils = require('./utils')
   , fs = require('fs')
   , temp = require('temp')
   , coolog = require('coolog')
   , logger = coolog.logger('Plee.co - Routes', true)
-  , phantom = require('node-phantom')
-  , PDFDocument = require('pdfkit');
+  , exec = require('child_process').exec;
 
 /**
  * Grab a web page from an url and create a pdf file
@@ -39,7 +36,7 @@ var utils = require('./utils')
 module.exports.grabByUrl = function (req, res) {
   
   var url = req.query.url
-    , tempImageFileName = temp.path({suffix: '.jpg'});
+    , tempPdfFile = temp.path({suffix: '.pdf'});
 
   if (!utils.isUrlValid(url)) {
       res.statusCode = 202;
@@ -47,41 +44,41 @@ module.exports.grabByUrl = function (req, res) {
       res.write(JSON.stringify({ 'message' : 'invalid url ' + req.query.url }));
       res.end();
   }
+  
+  exec("phantomjs bin/rasterize.js '" + url + "' " + tempPdfFile + " A4", function (error, stdout, stderr) {
+    if(error !== null) {
+      res.statusCode = 202;
+      res.setHeader('Content-Type', 'application/json');
+      res.write(JSON.stringify({ 'message' : 'Api error' }));
+      res.end();      
+      logger.error("Error while creating pdf ", stderr);
+      return;
+    }
 
-  phantom.create(function (err, ph) {
-  ph.createPage(function (err, page) {
-    page.open(url, function (err, status) {
-      page.render(tempImageFileName, function (err) {
-        var pdf = new PDFDocument();
+    fs.readFile(tempPdfFile, function (err, data) {
+      if (err) {
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json');
+        res.write(JSON.stringify({ 'message' : 'api error' }));
+        res.end();
+        logger.error("Error while reading pdf file " + tempPdfFile, err);
+        return;
+      }
 
-        if (err) {
-          logger.error("Error while creating image ", err);
-          res.statusCode = 500;
-          res.setHeader('Content-Type', 'application/json');
-          res.write(JSON.stringify({ 'message' : 'Api error' }));
-          res.end();            
-        } else {
-          pdf.image(tempImageFileName, 0, 0, {
-            fit : [545, 842]
-          });
-          pdf.output(function (repr) {
-            res.setHeader('Content-Length', repr.length);
-            res.setHeader('Content-Type', 'application/pdf; charset=utf-8');
-            res.write(new Buffer(repr,'binary'));
-            res.end();
-            try { 
-              fs.unlink(tempImageFileName); 
-            } catch (e) {}
-          })
-        }
-        ph.exit();
-      });
+      res.setHeader("Content-Type" , "application/pdf" );
+      res.setHeader("Content-Disposition:", "attachment; filename='file.pdf'"); //change with the url
+      res.write(data);
+      res.end();
+
+      // be sure to delete temp file
+      try { 
+        fs.unlink(tempPdfFile); 
+      } catch (e) {
+        logger.warn(e);
+      }
     });
+
   });
-});
-
-
-
 }
 
 /**
