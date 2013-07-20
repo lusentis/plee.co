@@ -24,14 +24,13 @@
  */
 
 var PORT = process.env.PORT || 3000
-  , APIKEY = process.env.SECRET_KEY;
+  , APIKEY = process.env.APIKEY;
 
 var coolog = require('coolog')
   , logger = coolog.logger('app.js', true)
   , connect = require('connect')
   , http = require('http')
-  , routes = require('./routes.js')
-  , url = require('url');
+  , routes = require('./routes.js');
 
 var app = connect();
 app.use(connect.query());
