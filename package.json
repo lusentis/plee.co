@@ -1,6 +1,6 @@
 {
   "name": "plee.co",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A simple webservice to create pdf from web pages",
   "main": "app.js",
   "author": "Mauro Bolis<mauro@plasticpanda.com>",

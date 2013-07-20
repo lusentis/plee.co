@@ -1,47 +1,67 @@
-Plee.co
-======
-A simple webservice to create pdf from web pages
+PleeCo
+=======
 
-### Prerequisites
-
-* [Node.js](http://nodejs.org) 0.10
-* [PhantomJS](http://phantomjs.org/) 
-
-Tested with
-* [Node.js](http://nodejs.org) 0.10.12
-* [PhantomJS](http://phantomjs.org/) 1.9
+A Web Service to convert Web Pages into PDF files, will be live (soon) at [plee.co](http://plee.co).
 
 
-### Usage
-```
+## Prerequisites
+
+* [Node.js 0.10+](http://nodejs.org)
+* [PhantomJS](http://phantomjs.org/) - tested with 1.9
+
+
+## Usage
+
+```bash
 npm install
-source .env
-node app.js
+npm install -g forever                       # optional
+PORT=3000 APIKEY=123 forever app.js          # -or- node app.js
 ```
 
-### Api
-You can grab a page using url using this api
-```
-http://<host>/byurl?url=<url>&key=<key>
-```
-For example
-```
-http://localhost:3000/byurl?url=http://arstechnica.com/&key=test
-```
-or
-```
-http://localhost:3000/byurl?url=http%3A%2F%2Farstechnica.com%2F&key=test
+
+## API
+
+Every API call must have an ```apikey``` parameter.<br />
+If an API call fails, one of the following HTTP status codes is returned: ```400```, ```401``` or ```500```.
+
+
+### by page URL
+
+
+**GET**
+
+```http://<host>/?apikey=<apikey>&url=<http-url>```
+
+For example, using *curl*:
+
+```bash
+curl http://localhost:3000/?apikey=123&url=http://www.arstechnica.com/
 ```
 
-You can also create a pdf passing the html code
+
+### by HTML
+
+**GET** (for small requests)
+
+```http://<host>/?apikey=<apikey>&html=<html-base64-encoded>```
+
+---
+
+**POST** (for pages up to 2MB)
+
+```http://<host>/?apikey=<apikey>```
+
 ```
-http://<host>/byhtml?html=<html>&key=<key>
+html=<base64-encoded-html>
 ```
-For example
+
+For example, using *curl*:
+
+```bash
+curl -X POST -d "html=PGh0bWw%2BDQo8Ym9keT4NCiA8cD4gSGVsbG8gV29ybGQhIDwvcD4NCjwvYm9keT4NCjwvaHRtbD4%3D" -H "Content-type: application/x-www-form-urlencoded" http://localhost:3000/?apikey=123
 ```
-http://localhost:3000/byhtml?html=PGh0bWw%2BDQo8Ym9keT4NCiA8cD4gSGVsbG8gV29ybGQhIDwvcD4NCjwvYm9keT4NCjwvaHRtbD4%3D&key=test
-```
-Note that html param must be encoded using base64 format.
+
+*Note that html param must be converted in **base64** and then urlencoded.*
 
 
 
