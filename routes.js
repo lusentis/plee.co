@@ -1,4 +1,4 @@
-/*jshint node:true, laxcomma:true, indent:2, white:true, curly:true, undef:true, unused:true, strict:true, trailing:true, eqnull:true */
+/*jshint node:true, laxcomma:true, indent:2, eqnull:true, unused:true */
 
 'use strict';
 
@@ -23,121 +23,118 @@
  * 
  */
 
-var utils = require('./utils')
-  , fs = require('fs')
-  , temp = require('temp')
+require('string-format');
+
+var temp = require('temp')
   , coolog = require('coolog')
-  , logger = coolog.logger('Plee.co - Routes', true)
-  , exec = require('child_process').exec;
+  , logger = coolog.logger('routes.js', true)
+  , fs = require('fs')
+  , spawn = require('child_process').spawn
+  , utils = require('./utils');
+
+
+function _rasterize(source, destination, res, next) {
+  logger.log('Rasterize called');
+  
+  var phantom = spawn('phantomjs', ['bin/rasterize.js', source, destination, 'A4'], { stdio: 'ignore' });
+  
+  phantom.on('close', function (code) {
+    if (code !== 0) {
+      logger.error('Error executing PhantomJS, exit code:', code);
+      
+      res.statusCode = 500;
+      res.setHeader('Content-Type', 'application/json');
+      res.write(JSON.stringify({ error: 'E_500', message: 'Server error' }));
+      res.end();
+      return;
+    }
+    
+    logger.log('Phantom ok.');
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition:', 'attachment; filename="page.pdf"'); //change with the url
+    
+    var pdf = fs.createReadStream(destination);
+    pdf.pipe(res);
+    pdf.on('end', next);
+  });
+}
+
 
 /**
  * Grab a web page from an url and create a pdf file
  */
-module.exports.grabByUrl = function (req, res) {
-  
+module.exports.byURL = function (req, res) {
   var url = req.query.url
-    , tempPdfFile = temp.path({suffix: '.pdf'});
+    , tempPDFPath = temp.path({suffix: '.pdf'});
+
+  logger.log('Grabbing URL', url);
 
   if (!utils.isUrlValid(url)) {
-      res.statusCode = 400;
-      res.setHeader('Content-Type', 'application/json');
-      res.write(JSON.stringify({ 'message' : 'invalid url ' + req.query.url }));
-      res.end();
-      return;
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    res.write(JSON.stringify({ error: 'E_INVAID_PARAMETER', message: 'Missing or nvalid parameter: `URL`' }));
+    res.end();
+    return;
   }
-  
-  exec("phantomjs bin/rasterize.js '" + url + "' " + tempPdfFile + " A4", function (error, stdout, stderr) {
-    if(error !== null) {
-      res.statusCode = 400;
-      res.setHeader('Content-Type', 'application/json');
-      res.write(JSON.stringify({ 'message' : 'Api error' }));
-      res.end();      
-      logger.error("Error while creating pdf ", stderr);
-      return;
+    
+  _rasterize(url, tempPDFPath, res, function () {
+    logger.ok('Rasterize from URL completed.');
+    res.end();
+    
+    // delete temp files
+    try { 
+      fs.unlink(tempPDFPath); 
+    } catch (e) {
+      logger.warn('Cannot delete temp PDF file:', e);
     }
-
-    fs.readFile(tempPdfFile, function (err, data) {
-      if (err) {
-        res.statusCode = 500;
-        res.setHeader('Content-Type', 'application/json');
-        res.write(JSON.stringify({ 'message' : 'api error' }));
-        res.end();
-        logger.error("Error while reading pdf file " + tempPdfFile, err);
-        return;
-      }
-
-      res.setHeader("Content-Type" , "application/pdf" );
-      res.setHeader("Content-Disposition:", "attachment; filename='file.pdf'"); //change with the url
-      res.write(data);
-      res.end();
-
-      // be sure to delete temp file
-      try { 
-        fs.unlink(tempPdfFile); 
-      } catch (e) {
-        logger.warn(e);
-      }
-    });
-
   });
-}
+};
+
 
 /**
  * Grab a web page from html code (encoded using base64)
  */
-module.exports.createByBase64 = function (req, res) {
-  
-  var base64Html = req.query.html
-    , tempPdfFile = temp.path({suffix: '.pdf'})
-    , tempHtmlFile = temp.path({suffix: '.html'});
+module.exports.byHTML = function (req, res) {
+  var HTMLContent = req.query.html
+    , tempHTMLPath = temp.path({suffix: '.html'})
+    , tempPDFPath = temp.path({suffix: '.pdf'});
 
-  if (base64Html == null || base64Html == undefined)  {
-      res.statusCode = 400;
-      res.setHeader('Content-Type', 'application/json');
-      res.write(JSON.stringify({ 'message' : 'missing parameters (html)' }));
-      res.end();    
-      return;
+  if (!HTMLContent || HTMLContent.length === 0)  {
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    res.write(JSON.stringify({ error: 'E_INVALID_PARAMETER', message: 'Missing or invalid parameter: `html`' }));
+    res.end();    
+    return;
   }
-
-  fs.writeFileSync(tempHtmlFile, new Buffer(base64Html, 'base64'));
   
-  exec("phantomjs bin/rasterize.js '" + tempHtmlFile + "' " + tempPdfFile + " A4", function (error, stdout, stderr) {
-    if(error !== null) {
-      res.statusCode = 400;
+  fs.writeFile(tempHTMLPath, new Buffer(HTMLContent, 'base64'), function (err) {
+    if (err) {
+      logger.error('Cannot write temporary HTML file', err);
+      
+      res.statusCode = 500;
       res.setHeader('Content-Type', 'application/json');
-      res.write(JSON.stringify({ 'message' : 'Api error' }));
-      res.end();      
-      logger.error("Error while creating pdf ", stderr);
+      res.write(JSON.stringify({ error: 'E_500', message: 'Server error' }));
+      res.end();
       return;
     }
-
-    fs.readFile(tempPdfFile, function (err, data) {
-      if (err) {
-        res.statusCode = 500;
-        res.setHeader('Content-Type', 'application/json');
-        res.write(JSON.stringify({ 'message' : 'api error' }));
-        res.end();
-        logger.error("Error while reading pdf file " + tempPdfFile, err);
-        return;
-      }
-
-      res.setHeader("Content-Type" , "application/pdf" );
-      res.setHeader("Content-Disposition:", "attachment; filename='file.pdf'"); //change with the url
-      res.write(data);
+    
+    _rasterize(tempHTMLPath, tempPDFPath, res, function () {
+      logger.ok('Rasterize from HTML completed.');
       res.end();
-
-      // be sure to delete temp files
+      
+      // delete temp files
       try { 
-        fs.unlink(tempPdfFile); 
+        fs.unlink(tempPDFPath); 
       } catch (e) {
-        logger.warn(e);
+        logger.warn('Cannot delete temp PDF file:', e);
       }
 
       try { 
-        fs.unlink(tempHtmlFile); 
+        fs.unlink(tempHTMLPath);
       } catch (e) {
-        logger.warn(e);
+        logger.warn('Cannot delete temp HTML file:', e);
       }
     });
-  });  
-}
+  });
+};

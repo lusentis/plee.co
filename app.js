@@ -1,4 +1,4 @@
-/*jshint node:true, laxcomma:true, indent:2, white:true, curly:true, undef:true, unused:true, strict:true, trailing:true, eqnull:true */
+/*jshint node:true, laxcomma:true, indent:2, eqnull:true, unused:true */
 
 'use strict';
 
@@ -23,53 +23,58 @@
  * 
  */
 
-var API_PORT = 3000 // change with ENV variable?
-  , SECRET_KEY = process.env.SECRET_KEY;
+var PORT = process.env.PORT || 3000
+  , APIKEY = process.env.SECRET_KEY;
 
 var coolog = require('coolog')
-  , logger = coolog.logger('Plee.co', true)
+  , logger = coolog.logger('app.js', true)
   , connect = require('connect')
-  , asciify = require('asciify')
   , http = require('http')
   , routes = require('./routes.js')
   , url = require('url');
 
+var app = connect();
+app.use(connect.query());
+app.use(requireAPIKey(APIKEY));
+app.use(router);
 
-var app = connect()
-          .use(connect.query())
-          .use(validateKey)
-          .use(dispatch);
 
+function requireAPIKey(required_apikey) {  
+  if (!required_apikey) {
+    throw new Error('Please provide an APIKEY.');
+  }
 
-function validateKey (req, res, next) {
-  var key = req.query.key;
-  if (key == null || key == undefined || key !== SECRET_KEY) {
+  return function _requireAPIKeyMiddleware(req, res, next) {
+    var apikey = req.query.apikey;
+    
+    if (apikey !== required_apikey) {
       res.statusCode = 401;
       res.setHeader('Content-Type', 'application/json');
-      res.write(JSON.stringify({ 'message' : 'Invalid api key' }));
+      res.write(JSON.stringify({ error: 'E_INVALID_API_KEY', message: 'The API key you provided is not valid.' }));
       res.end();
+    } else {
+      next();
+    }
+  };
+}
+
+
+function router(req, res, next) {
+  var path = url.parse(req.url).pathname;
+
+  if ('GET' === req.method && '/byurl' === path) {
+    routes.byURL(req, res);
+
+  } else if ('GET' === req.method && '/byhtml' === path) {
+    routes.byHTML(req, res);
+
   } else {
     next();
   }
 }
 
-function dispatch (req, res, next) {
-  var path = url.parse(req.url).pathname;
 
-  if ('GET' === req.method && '/byurl' === path) {
-    routes.grabByUrl(req, res);
-
-  } else if ('GET' === req.method && '/byhtml' === path) {
-    routes.createByBase64(req, res);
-
-  } else {
-    res.statusCode = 400;
-    res.write('Bad request for ' + path);
-    res.end();
-  }
-}
-
-
-http.createServer(app).listen(API_PORT, function () {
-  logger.ok('API Server listening on port ' + API_PORT + '.');
+http.createServer(app).listen(PORT, function () {
+  logger.debug('Started at', new Date().toISOString());
+  logger.ok('Plee.co API server listening on port ' + PORT + '.');
 });
