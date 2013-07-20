@@ -66,7 +66,7 @@ curl -X POST -d "html=PGh0bWw%2BDQo8Ym9keT4NCiA8cD4gSGVsbG8gV29ybGQhIDwvcD4NCjwv
 
 ## License ##
 
-Copyright (c) 2013 PlasticPanda.com
+Copyright (c) 2013 Mauro Bolis <mauro@plasticpanda.com>, Simone Lusenti <simone@plasticpanda.com>, Plastic Panda
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
