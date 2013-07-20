@@ -64,9 +64,8 @@ function _rasterize(source, destination, res, next) {
 /**
  * Grab a web page from an url and create a pdf file
  */
-module.exports.byURL = function (req, res) {
-  var url = req.query.url
-    , tempPDFPath = temp.path({suffix: '.pdf'});
+module.exports.byURL = function (url, res) {
+  var tempPDFPath = temp.path({suffix: '.pdf'});
 
   logger.log('Grabbing URL', url);
 
@@ -95,9 +94,8 @@ module.exports.byURL = function (req, res) {
 /**
  * Grab a web page from html code (encoded using base64)
  */
-module.exports.byHTML = function (req, res) {
-  var HTMLContent = req.query.html
-    , tempHTMLPath = temp.path({suffix: '.html'})
+module.exports.byHTML = function (HTMLContent, res) {
+  var tempHTMLPath = temp.path({suffix: '.html'})
     , tempPDFPath = temp.path({suffix: '.pdf'});
 
   if (!HTMLContent || HTMLContent.length === 0)  {

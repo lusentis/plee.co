@@ -35,6 +35,7 @@ var coolog = require('coolog')
 
 var app = connect();
 app.use(connect.query());
+app.use(connect.urlencoded({ limit: 1024 * 1024 })); // 2MB size limit for POST requests (use GET /?url= for larger ones)
 app.use(requireAPIKey(APIKEY));
 app.use(router);
 
@@ -60,14 +61,16 @@ function requireAPIKey(required_apikey) {
 
 
 function router(req, res, next) {
-  var path = url.parse(req.url).pathname;
+  
+  if ('GET' === req.method && req.query.url) {
+    routes.byURL(req.query.url, res);
 
-  if ('GET' === req.method && '/byurl' === path) {
-    routes.byURL(req, res);
-
-  } else if ('GET' === req.method && '/byhtml' === path) {
-    routes.byHTML(req, res);
-
+  } else if ('GET' === req.method && req.query.html) {
+    routes.byHTML(req.query.html, res);
+    
+  } else if ('POST' === req.method && req.body.html) {
+    routes.byHTML(req.body.html, res);
+  
   } else {
     next();
   }
