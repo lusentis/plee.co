@@ -59,7 +59,7 @@ For example, using *curl*:
 curl -X POST -d "html=PGh0bWw%2BDQo8Ym9keT4NCiA8cD4gSGVsbG8gV29ybGQhIDwvcD4NCjwvYm9keT4NCjwvaHRtbD4%3D" -H "Content-type: application/x-www-form-urlencoded" http://localhost:3000/?apikey=123
 ```
 
-*Note that html param must be converted in **base64** and then urlencoded.*
+**Important** The *html* parameter must be converted in **base64** and then urlencoded.
 
 
 
