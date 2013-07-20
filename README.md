@@ -30,7 +30,7 @@ If an API call fails, one of the following HTTP status codes is returned: ```400
 
 **GET**
 
-```http://<host>/?apikey=<apikey>&url=<http-url>```
+    http://<host>/?apikey=<apikey>&url=<http-url>
 
 For example, using *curl*:
 
@@ -43,17 +43,15 @@ curl http://localhost:3000/?apikey=123&url=http://www.arstechnica.com/
 
 **GET** (for small requests)
 
-```http://<host>/?apikey=<apikey>&html=<html-base64-encoded>```
+    http://<host>/?apikey=<apikey>&html=<html-base64-encoded>
 
 ---
 
 **POST** (for pages up to 2MB)
 
-```http://<host>/?apikey=<apikey>```
+    http://<host>/?apikey=<apikey>
+    html=<base64-encoded-html>
 
-```
-html=<base64-encoded-html>
-```
 
 For example, using *curl*:
 
