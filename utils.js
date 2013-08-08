@@ -2,6 +2,8 @@
 
 'use strict';
 
+var S = require('string');
+
 /*
  * 
  * ## LICENSE ##
@@ -35,4 +37,9 @@ module.exports.isUrlValid = function (url) {
   }
 
   return true;
-}
+};
+
+module.exports.sanitizeFilename = function (name) {
+  return S(name).escapeHTML().camelize().stripPunctuation().truncate(20).toString();
+};
+

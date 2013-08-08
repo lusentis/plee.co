@@ -33,9 +33,10 @@ var temp = require('temp')
   , utils = require('./utils');
 
 
-function _rasterize(source, destination, res, next) {
+function _rasterize(source, destination, filename, res, next) {
   logger.log('Rasterize called');
   
+  console.log('phantomjs bin/rasterize.js '+source+' '+destination+" A4");
   var phantom = spawn('phantomjs', ['bin/rasterize.js', source, destination, 'A4'], { stdio: 'ignore' });
   
   phantom.on('close', function (code) {
@@ -52,7 +53,7 @@ function _rasterize(source, destination, res, next) {
     logger.log('Phantom ok.');
     
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition:', 'attachment; filename="page.pdf"'); //change with the url
+    res.setHeader('Content-Disposition:', 'attachment; filename="' + filename + '.pdf"'); //change with the url
     
     var pdf = fs.createReadStream(destination);
     pdf.pipe(res);
@@ -64,10 +65,15 @@ function _rasterize(source, destination, res, next) {
 /**
  * Grab a web page from an url and create a pdf file
  */
-module.exports.byURL = function (url, res) {
-  var tempPDFPath = temp.path({suffix: '.pdf'});
+module.exports.byURL = function (url, req, res) {
+  var tempPDFPath = temp.path({suffix: '.pdf'})
+    , filename = req.query.filename || 'page'
+    ;
+
+  filename = utils.sanitizeFilename(filename);
 
   logger.log('Grabbing URL', url);
+  logger.log('Filename', filename);
 
   if (!utils.isUrlValid(url)) {
     res.statusCode = 400;
@@ -77,7 +83,7 @@ module.exports.byURL = function (url, res) {
     return;
   }
     
-  _rasterize(url, tempPDFPath, res, function () {
+  _rasterize(url, tempPDFPath, filename, res, function () {
     logger.ok('Rasterize from URL completed.');
     res.end();
     
@@ -94,9 +100,15 @@ module.exports.byURL = function (url, res) {
 /**
  * Grab a web page from html code (encoded using base64)
  */
-module.exports.byHTML = function (HTMLContent, res) {
+module.exports.byHTML = function (HTMLContent, req, res) {
   var tempHTMLPath = temp.path({suffix: '.html'})
-    , tempPDFPath = temp.path({suffix: '.pdf'});
+    , tempPDFPath = temp.path({suffix: '.pdf'})
+    , filename = req.query.filename || 'page'
+    ;
+
+  filename = utils.sanitizeFilename(filename);
+
+  logger.log('Filename', filename);
 
   if (!HTMLContent || HTMLContent.length === 0)  {
     res.statusCode = 400;
@@ -117,7 +129,7 @@ module.exports.byHTML = function (HTMLContent, res) {
       return;
     }
     
-    _rasterize(tempHTMLPath, tempPDFPath, res, function () {
+    _rasterize(tempHTMLPath, tempPDFPath, filename, res, function () {
       logger.ok('Rasterize from HTML completed.');
       res.end();
       

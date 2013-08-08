@@ -9,7 +9,8 @@
     "coolog": "~0.3.0",
     "connect": "~2.8.4",
     "temp": "~0.5.1",
-    "string-format": "~0.2.1"
+    "string-format": "~0.2.1",
+    "string": "~1.5.0"
   },
   "repository": {
     "type": "git",

@@ -30,33 +30,33 @@ If an API call fails, one of the following HTTP status codes is returned: ```400
 
 **GET**
 
-    http://<host>/?apikey=<apikey>&url=<http-url>
+    http://<host>/?apikey=<apikey>&url=<http-url>&filename=<file-name>
 
 For example, using *curl*:
 
 ```bash
-curl http://localhost:3000/?apikey=123&url=http://www.arstechnica.com/
+curl http://localhost:3000/?apikey=123&url=http://www.arstechnica.com/&filename=ars
 ```
-
+Note that filename is optional
 
 ### by HTML
 
 **GET** (for small requests)
 
-    http://<host>/?apikey=<apikey>&html=<html-base64-encoded>
+    http://<host>/?apikey=<apikey>&html=<html-base64-encoded>&filename=<file-name>
 
 ---
 
 **POST** (for pages up to 2MB)
 
-    http://<host>/?apikey=<apikey>
+    http://<host>/?apikey=<apikey>&filename=<file-name>
     html=<base64-encoded-html>
 
 
 For example, using *curl*:
 
 ```bash
-curl -X POST -d "html=PGh0bWw%2BDQo8Ym9keT4NCiA8cD4gSGVsbG8gV29ybGQhIDwvcD4NCjwvYm9keT4NCjwvaHRtbD4%3D" -H "Content-type: application/x-www-form-urlencoded" http://localhost:3000/?apikey=123
+curl -X POST -d "html=PGh0bWw%2BDQo8Ym9keT4NCiA8cD4gSGVsbG8gV29ybGQhIDwvcD4NCjwvYm9keT4NCjwvaHRtbD4%3D" -H "Content-type: application/x-www-form-urlencoded" http://localhost:3000/?apikey=123&filename=test
 ```
 
 **Important** The *html* parameter must be converted in **base64** and then urlencoded.

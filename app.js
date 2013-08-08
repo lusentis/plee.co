@@ -62,13 +62,13 @@ function requireAPIKey(required_apikey) {
 function router(req, res, next) {
   
   if ('GET' === req.method && req.query.url) {
-    routes.byURL(req.query.url, res);
+    routes.byURL(req.query.url, req, res);
 
   } else if ('GET' === req.method && req.query.html) {
-    routes.byHTML(req.query.html, res);
+    routes.byHTML(req.query.html, req, res);
     
   } else if ('POST' === req.method && req.body.html) {
-    routes.byHTML(req.body.html, res);
+    routes.byHTML(req.body.html, req, res);
   
   } else {
     next();
