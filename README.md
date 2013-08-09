@@ -1,7 +1,7 @@
 PleeCo
 =======
 
-A Web Service to convert Web Pages into PDF files, will be live (soon) at [plee.co](http://plee.co).
+A Web Service to convert Web Pages into PDF files.
 
 
 ## Prerequisites
