@@ -40,6 +40,6 @@ module.exports.isUrlValid = function (url) {
 };
 
 module.exports.sanitizeFilename = function (name) {
-  return S(name).escapeHTML().camelize().stripPunctuation().truncate(20).toString();
+  return S(name).escapeHTML().camelize().stripPunctuation().truncate(200).toString();
 };
 
