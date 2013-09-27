@@ -37,7 +37,7 @@ function _rasterize(source, destination, filename, res, next) {
   logger.log('Rasterize called');
   
   console.log('phantomjs bin/rasterize.js '+source+' '+destination+" A4");
-  var phantom = spawn('phantomjs', ['bin/rasterize.js', source, destination, 'A4'], { stdio: 'ignore' });
+  var phantom = spawn('phantomjs', ['--ignore-ssl-errors=yes', 'bin/rasterize.js', source, destination, 'A4'], { stdio: 'ignore' });
   
   phantom.on('close', function (code) {
     if (code !== 0) {
