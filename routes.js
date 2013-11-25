@@ -33,11 +33,11 @@ var temp = require('temp')
   , utils = require('./utils');
 
 
-function _rasterize(source, destination, filename, res, next) {
+function _rasterize(source, destination, filename, orientation, papersize, zoom, res, next) {
   logger.log('Rasterize called');
   
-  console.log('phantomjs bin/rasterize.js '+source+' '+destination+" A4");
-  var phantom = spawn('phantomjs', ['--ignore-ssl-errors=yes', 'bin/rasterize.js', source, destination, 'A4'], { stdio: 'ignore' });
+  console.log('phantomjs bin/rasterize.js '+source+' '+destination+" " + papersize + " " + orientation + " " + zoom);
+  var phantom = spawn('phantomjs', ['--ignore-ssl-errors=yes', 'bin/rasterize.js', source, destination, papersize, orientation, zoom], { stdio: 'ignore' });
   
   phantom.on('close', function (code) {
     if (code !== 0) {
@@ -68,6 +68,9 @@ function _rasterize(source, destination, filename, res, next) {
 module.exports.byURL = function (url, req, res) {
   var tempPDFPath = temp.path({suffix: '.pdf'})
     , filename = req.query.filename || 'page'
+    , orientation = req.query.orientation || 'portrait'
+    , papersize = req.query.size || 'A4'
+    , zoom = parseFloat(req.query.zoom) || '1'
     ;
 
   filename = utils.sanitizeFilename(filename);
@@ -83,7 +86,7 @@ module.exports.byURL = function (url, req, res) {
     return;
   }
     
-  _rasterize(url, tempPDFPath, filename, res, function () {
+  _rasterize(url, tempPDFPath, filename, orientation, papersize, zoom, res, function () {
     logger.ok('Rasterize from URL completed.');
     res.end();
     
@@ -104,6 +107,9 @@ module.exports.byHTML = function (HTMLContent, req, res) {
   var tempHTMLPath = temp.path({suffix: '.html'})
     , tempPDFPath = temp.path({suffix: '.pdf'})
     , filename = req.query.filename || 'page'
+    , orientation = req.query.orientation || 'portrait'
+    , papersize = req.query.size || 'A4'
+    , zoom = req.query.zoom || '1'
     ;
 
   filename = utils.sanitizeFilename(filename);
@@ -129,7 +135,7 @@ module.exports.byHTML = function (HTMLContent, req, res) {
       return;
     }
     
-    _rasterize(tempHTMLPath, tempPDFPath, filename, res, function () {
+    _rasterize(tempHTMLPath, tempPDFPath, filename, orientation, papersize, zoom, res, function () {
       logger.ok('Rasterize from HTML completed.');
       res.end();
       
