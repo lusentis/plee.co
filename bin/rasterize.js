@@ -9,7 +9,7 @@ var page = require('webpage').create(),
   system = require('system'),
   address, output, size;
 
-console.log('--------> ', system.args);
+//console.log('--------> ', system.args);
 
 /*
 if (system.args.length < 3 || system.args.length > 5) {
