@@ -36,8 +36,8 @@ var temp = require('temp')
 function _rasterize(source, destination, filename, orientation, papersize, zoom, res, next) {
   logger.log('Rasterize called');
   
-  console.log('phantomjs bin/rasterize.js '+source+' '+destination+" " + papersize + " " + orientation + " " + zoom);
-  var phantom = spawn('phantomjs', ['--ignore-ssl-errors=yes', 'bin/rasterize.js', source, destination, papersize, orientation, zoom], { stdio: 'ignore' });
+  console.log('./bin/phantomjs bin/rasterize.js '+source+' '+destination+" " + papersize + " " + orientation + " " + zoom);
+  var phantom = spawn('./bin/phantomjs', ['--ignore-ssl-errors=yes', 'bin/rasterize.js', source, destination, papersize, orientation, zoom], { stdio: 'ignore' });
   
   phantom.on('close', function (code) {
     if (code !== 0) {
