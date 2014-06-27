@@ -24,7 +24,19 @@
  */
 
 var PORT = process.env.PORT || 3000
-  , APIKEY = process.env.APIKEY;
+  , APIKEY = {};
+
+
+process.env.APIKEY.split(',').forEach(function (i) {
+  var _t = i.split(':');
+  if (!_t[0] || !_t[1]) return;
+  APIKEY[_t[0]] = _t[1];
+});
+
+if (!APIKEY || APIKEY.length < 1) {
+  throw new Error('Please provide an APIKEY.');
+}
+
 
 var coolog = require('coolog')
   , logger = coolog.logger('app.js', true)
@@ -32,22 +44,22 @@ var coolog = require('coolog')
   , http = require('http')
   , routes = require('./routes.js');
 
+
 var app = connect();
 app.use(connect.query());
 app.use(connect.urlencoded({ limit: 1024 * 1024 })); // 2MB size limit for POST requests (use GET /?url= for larger ones)
-app.use(requireAPIKey(APIKEY));
+app.use(requireAPIKey());
 app.use(router);
 
 
-function requireAPIKey(required_apikey) {  
-  if (!required_apikey) {
-    throw new Error('Please provide an APIKEY.');
-  }
-
+function requireAPIKey() {  
   return function _requireAPIKeyMiddleware(req, res, next) {
-    var apikey = req.query.apikey;
+    var host = req.headers.host.toLowerCase()
+      , required_apikey = APIKEY[host]
+      , apikey = req.query.apikey
+      ;
     
-    if (apikey !== required_apikey) {
+    if (!apikey || apikey !== required_apikey) {
       res.statusCode = 401;
       res.setHeader('Content-Type', 'application/json');
       res.write(JSON.stringify({ error: 'E_INVALID_API_KEY', message: 'The API key you provided is not valid.' }));
